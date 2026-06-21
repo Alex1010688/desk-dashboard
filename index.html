@@ -87,10 +87,27 @@ body::after{
   padding:10px;
   display:flex;
   flex-direction:column;
-  gap:10px;
   overflow:hidden;
   position:relative;
   z-index:2;
+}
+
+
+/* Old WebKit safe frame spacing: avoids flex-gap. */
+#app > * + *{
+  margin-top:7px;
+}
+
+.top > * + *{
+  margin-left:7px;
+}
+
+.task-area > * + *{
+  margin-top:7px;
+}
+
+.controls > * + *{
+  margin-left:7px;
 }
 
 .frame{
@@ -143,7 +160,6 @@ body::after{
   flex-shrink:0;
   display:flex;
   align-items:stretch;
-  gap:10px;
 }
 
 .clock{
@@ -235,20 +251,20 @@ body::after{
 .cal-grid{
   display:grid;
   grid-template-columns:repeat(7,1fr);
-  grid-auto-rows:39px;
+  grid-auto-rows:36px;
   text-align:center;
 }
 
 .cal-head{
   color:var(--cyan);
   font-size:18px;
-  line-height:34px;
+  line-height:32px;
   font-weight:900;
 }
 
 .cal-day{
   font-size:18px;
-  line-height:37px;
+  line-height:32px;
   font-weight:900;
   color:var(--text);
   border:1px solid transparent;
@@ -270,7 +286,6 @@ body::after{
   min-height:0;
   display:flex;
   flex-direction:column;
-  gap:10px;
 }
 
 .panel{
@@ -487,7 +502,6 @@ button:active{
   flex-shrink:0;
   height:36px;
   display:flex;
-  gap:10px;
 }
 
 .controls button{
@@ -531,8 +545,8 @@ button:active{
   .time{font-size:84px}
   .date{font-size:24px}
   .info-line{font-size:20px}
-  .cal-grid{grid-auto-rows:32px}
-  .cal-day{line-height:34px;font-size:18px}
+  .cal-grid{grid-auto-rows:30px}
+  .cal-day{line-height:32px;font-size:18px}
   .task{min-height:38px;font-size:18px}
 }
 
@@ -644,7 +658,7 @@ button:active{
 */
 
 /* Change this to a new version name if you want to force the browser to load new hardcoded defaults. */
-var STORE_KEY = "workDeskTasksDark_v3";
+var STORE_KEY = "workDeskTasksDark_v1";
 
 var DAILY_ROLLOVER_HOUR = 6;
 
@@ -659,7 +673,7 @@ function makeId(){ return "id_" + Math.random().toString(36).substr(2, 9) + "_" 
 var defaultState = {
   weeklyTasks: [],
 
-  dailyPresets: {
+dailyPresets: {
     "1": [
 	  /* Monday tasks go here */
       { id: makeId(), text: "Check new sheet" },
