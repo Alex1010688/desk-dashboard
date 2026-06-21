@@ -1,0 +1,1129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Work Deck Interface</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<style>
+:root{
+  --bg:#030509;
+  --panel:#070b12;
+  --panel2:#0b1018;
+  --line:#66ff66;
+  --line-dim:#1b743d;
+  --cyan:#57e8ff;
+  --green:#9dff6b;
+  --amber:#ffe06b;
+  --red:#ff4d4d;
+  --text:#e9fff0;
+  --muted:#8dbb9b;
+  --dim:#526a5d;
+  --done:#60746a;
+}
+
+*{box-sizing:border-box}
+
+html,body{
+  margin:0;
+  padding:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(87,232,255,.08), transparent 35%),
+    linear-gradient(180deg,#05070d,#020305);
+  color:var(--text);
+  font-family:"Courier New", Courier, monospace;
+  -webkit-text-size-adjust:100%;
+}
+
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  opacity:.13;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,.09) 0px,
+      rgba(255,255,255,.09) 1px,
+      transparent 1px,
+      transparent 4px
+    );
+  z-index:10;
+}
+
+body::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  opacity:.18;
+  background-image:
+    linear-gradient(rgba(102,255,102,.16) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(102,255,102,.12) 1px, transparent 1px);
+  background-size: 36px 36px;
+  mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+}
+
+#app{
+  width:100vw;
+  height:100vh;
+  max-width:820px;
+  margin:0 auto;
+  padding:10px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  overflow:hidden;
+  position:relative;
+}
+
+.frame{
+  position:relative;
+  background:linear-gradient(180deg, rgba(7,11,18,.96), rgba(3,6,10,.98));
+  border:1px solid var(--line);
+  box-shadow:
+    inset 0 0 0 1px rgba(87,232,255,.12),
+    0 0 14px rgba(102,255,102,.12);
+  clip-path:polygon(
+    0 0,
+    calc(100% - 18px) 0,
+    100% 18px,
+    100% 100%,
+    18px 100%,
+    0 calc(100% - 18px)
+  );
+}
+
+.frame::before,
+.frame::after{
+  content:"";
+  position:absolute;
+  pointer-events:none;
+  border-color:var(--cyan);
+  opacity:.65;
+}
+
+.frame::before{
+  top:5px;
+  left:5px;
+  width:34px;
+  height:12px;
+  border-top:2px solid;
+  border-left:2px solid;
+}
+
+.frame::after{
+  right:5px;
+  bottom:5px;
+  width:34px;
+  height:12px;
+  border-right:2px solid;
+  border-bottom:2px solid;
+}
+
+.top{
+  height:335px;
+  flex-shrink:0;
+  display:flex;
+  gap:8px;
+}
+
+.clock{
+  flex:1.2;
+  padding:15px 16px 12px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+}
+
+.calendar{
+  flex:.8;
+  padding:10px;
+}
+
+.label{
+  color:var(--green);
+  font-size:15px;
+  font-weight:900;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  margin-bottom:6px;
+}
+
+.label::before{
+  content:"> ";
+  color:var(--cyan);
+}
+
+.date{
+  font-size:27px;
+  line-height:1.1;
+  font-weight:900;
+  color:var(--text);
+  text-shadow:0 0 7px rgba(157,255,107,.38);
+}
+
+.time{
+  font-size:95px;
+  line-height:.92;
+  font-weight:900;
+  letter-spacing:-3px;
+  color:#f6fff8;
+  text-shadow:
+    0 0 8px rgba(102,255,102,.65),
+    0 0 24px rgba(102,255,102,.22);
+}
+
+.status-lines{
+  border-top:1px solid rgba(102,255,102,.35);
+  padding-top:8px;
+}
+
+.info-line{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  gap:10px;
+  margin-top:5px;
+  font-size:23px;
+  font-weight:900;
+  color:var(--text);
+}
+
+.info-line span{
+  color:var(--muted);
+  text-transform:uppercase;
+  font-size:15px;
+  letter-spacing:1px;
+}
+
+.info-line strong{
+  text-align:right;
+}
+
+.month-title{
+  color:var(--green);
+  text-align:center;
+  font-size:20px;
+  line-height:1;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  padding:3px 0 8px;
+  border-bottom:1px solid rgba(102,255,102,.28);
+  margin-bottom:6px;
+}
+
+.cal-grid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  grid-auto-rows:35px;
+  text-align:center;
+}
+
+.cal-head{
+  color:var(--cyan);
+  font-size:12px;
+  line-height:28px;
+  font-weight:900;
+}
+
+.cal-day{
+  font-size:16px;
+  line-height:32px;
+  font-weight:900;
+  color:var(--text);
+  border:1px solid transparent;
+}
+
+.cal-muted{
+  color:#31473a;
+}
+
+.cal-today{
+  color:#031008;
+  background:var(--green);
+  border-color:#d8ffbd;
+  box-shadow:0 0 14px rgba(157,255,107,.55);
+}
+
+.task-area{
+  flex:1;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.panel{
+  flex:1;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+}
+
+.panel-head{
+  flex-shrink:0;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border-bottom:1px solid rgba(102,255,102,.35);
+  background:
+    linear-gradient(90deg, rgba(102,255,102,.11), transparent 65%),
+    rgba(11,16,24,.96);
+  padding:8px 10px;
+}
+
+.panel-title{
+  color:var(--text);
+  font-size:22px;
+  line-height:1;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:2px;
+}
+
+.panel-title::before{
+  content:"// ";
+  color:var(--green);
+  font-size:20px;
+}
+
+.panel-count{
+  color:var(--cyan);
+  font-size:14px;
+  font-weight:900;
+}
+
+.list{
+  flex:1;
+  min-height:0;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  padding:4px 8px;
+}
+
+.task{
+  min-height:38px;
+  display:flex;
+  align-items:center;
+  border-bottom:1px solid rgba(102,255,102,.12);
+  font-size:16px;
+  font-weight:800;
+}
+
+/* Custom task checkbox */
+.task-check{
+  position:relative;
+  width:22px;
+  height:22px;
+  margin:0 8px 0 0;
+  flex-shrink:0;
+  display:inline-block;
+}
+
+.task-check input{
+  position:absolute;
+  opacity:0;
+  width:22px;
+  height:22px;
+  margin:0;
+}
+
+.task-check-box{
+  position:absolute;
+  inset:0;
+  border:1px solid var(--line);
+  background:#020403;
+  box-shadow:
+    inset 0 0 0 1px rgba(102,255,102,.12),
+    0 0 7px rgba(102,255,102,.12);
+}
+
+.task-check input:checked + .task-check-box{
+  background:var(--green);
+  border-color:var(--green);
+  box-shadow:
+    0 0 9px rgba(157,255,107,.6),
+    inset 0 0 0 2px #031008;
+}
+
+/* Completed task box fills green but shows no tick mark. */
+.task-check input:checked + .task-check-box::after{
+  content:none;
+}
+
+/* Theme-matched scroll bars */
+.list::-webkit-scrollbar{
+  width:10px;
+}
+
+.list::-webkit-scrollbar-track{
+  background:#020403;
+  border-left:1px solid rgba(102,255,102,.22);
+}
+
+.list::-webkit-scrollbar-thumb{
+  background:linear-gradient(180deg, var(--green), var(--line-dim));
+  border:2px solid #020403;
+  box-shadow:0 0 8px rgba(102,255,102,.35);
+}
+
+.list::-webkit-scrollbar-corner{
+  background:#020403;
+}
+
+.task-text{
+  flex:1;
+  min-width:0;
+  word-break:break-word;
+  text-transform:uppercase;
+}
+
+.task.done .task-text{
+  color:var(--done);
+  text-decoration:line-through;
+}
+
+.carried-tag{
+  color:var(--amber);
+  font-size:11px;
+  font-weight:900;
+  margin-left:6px;
+  text-transform:uppercase;
+}
+
+.task-actions{
+  display:flex;
+  flex-shrink:0;
+  margin-left:5px;
+}
+
+button{
+  -webkit-appearance:none;
+  appearance:none;
+  border:1px solid var(--line-dim);
+  background:#08110c;
+  color:var(--green);
+  font-family:"Courier New", Courier, monospace;
+  font-size:12px;
+  font-weight:900;
+  padding:5px 7px;
+  margin-left:4px;
+  border-radius:0;
+  text-transform:uppercase;
+}
+
+button:active{
+  background:var(--green);
+  color:#031008;
+}
+
+.add{
+  flex-shrink:0;
+  display:flex;
+  border-top:1px solid rgba(102,255,102,.35);
+  background:#050805;
+  padding:6px;
+}
+
+.add input,.add select{
+  min-width:0;
+  border:1px solid var(--line-dim);
+  background:#020403;
+  color:var(--text);
+  font-family:"Courier New", Courier, monospace;
+  font-size:14px;
+  font-weight:800;
+  padding:7px;
+  margin-right:5px;
+  border-radius:0;
+  outline:none;
+  text-transform:uppercase;
+}
+
+.add input::placeholder{
+  color:#4f755b;
+}
+
+.add input{flex:1}
+.add select{width:62px;color:var(--green)}
+
+.empty{
+  color:var(--dim);
+  padding:10px 4px;
+  font-size:15px;
+  font-weight:900;
+}
+
+.empty::before{
+  content:"NO DATA // ";
+  color:var(--line-dim);
+}
+
+.controls{
+  flex-shrink:0;
+  height:32px;
+  display:flex;
+  gap:8px;
+}
+
+.controls button{
+  flex:1;
+  margin-left:0;
+}
+
+.toggle-completed{
+  flex:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  border:1px solid var(--line-dim);
+  background:#050805;
+  color:var(--green);
+  font-size:15px;
+  font-weight:900;
+  text-transform:uppercase;
+  transition:background .12s linear, color .12s linear, box-shadow .12s linear, border-color .12s linear;
+}
+
+.toggle-completed.is-on{
+  background:var(--green);
+  color:#031008;
+  border-color:var(--green);
+  box-shadow:
+    0 0 10px rgba(157,255,107,.55),
+    inset 0 0 0 2px rgba(3,16,8,.55);
+}
+
+.toggle-completed input{
+  position:absolute;
+  opacity:0;
+  pointer-events:none;
+}
+
+/* No visible checkbox is shown for the SHOW COMPLETE control. */
+
+@media (max-height:880px){
+  .top{height:304px}
+  .time{font-size:84px}
+  .date{font-size:24px}
+  .info-line{font-size:20px}
+  .cal-grid{grid-auto-rows:32px}
+  .cal-day{line-height:30px;font-size:15px}
+  .task{min-height:34px;font-size:15px}
+}
+
+@media (orientation:landscape){
+  body{overflow:auto}
+  #app{
+    width:768px;
+    height:1024px;
+    max-width:768px;
+    max-height:1024px;
+  }
+}
+</style>
+</head>
+
+<body>
+<div id="app">
+  <div class="top">
+    <div class="frame clock">
+      <div>
+        <div class="label">system time</div>
+        <div class="date" id="dateText">Loading...</div>
+      </div>
+      <div class="time" id="timeText">--:--</div>
+      <div class="status-lines">
+        <div class="info-line"><span>+48h</span><strong id="plus48Text">--</strong></div>
+        <div class="info-line"><span>week</span><strong id="weekText">--</strong></div>
+      </div>
+    </div>
+
+    <div class="frame calendar">
+      <div class="month-title" id="monthTitle">Month</div>
+      <div class="cal-grid" id="calendarGrid"></div>
+    </div>
+  </div>
+
+  <div class="task-area">
+    <div class="frame panel">
+      <div class="panel-head">
+        <div class="panel-title">Daily</div>
+        <div class="panel-count" id="dailySummary">0/0</div>
+      </div>
+      <div class="list" id="dailyList"></div>
+      <div class="add">
+        <select id="daySelect">
+          <option value="1">MON</option>
+          <option value="2">TUE</option>
+          <option value="3">WED</option>
+          <option value="4">THU</option>
+          <option value="5">FRI</option>
+          <option value="6">SAT</option>
+          <option value="0">SUN</option>
+        </select>
+        <input id="dailyInput" placeholder="ADD PRESET">
+        <button onclick="addDailyPreset()">ADD</button>
+      </div>
+    </div>
+
+    <div class="frame panel">
+      <div class="panel-head">
+        <div class="panel-title">To Do</div>
+        <div class="panel-count" id="todoSummary">0/0</div>
+      </div>
+      <div class="list" id="todoList"></div>
+      <div class="add">
+        <input id="todoInput" placeholder="ADD TO DO">
+        <button onclick="addTodo()">ADD</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <label class="toggle-completed" id="showCompletedLabel">
+      <input type="checkbox" id="showCompletedToggle" onchange="toggleCompleted()">
+      SHOW COMPLETE
+    </label>
+  </div>
+</div>
+
+<script>
+/*
+  ============================================================
+  HARDCODED TASKS SECTION
+  ============================================================
+
+  Put your default tasks in the `defaultState` object below.
+
+  Daily preset task day codes:
+    "1" = Monday
+    "2" = Tuesday
+    "3" = Wednesday
+    "4" = Thursday
+    "5" = Friday
+    "6" = Saturday
+    "0" = Sunday
+
+  Example:
+    "1": [
+      { id: makeId(), text: "Check weekend handover" },
+      { id: makeId(), text: "Review open faults" }
+    ],
+
+  To-do tasks:
+    Put starting one-off tasks inside `oneOffTasks`, for example:
+    oneOffTasks: [
+      { id: makeId(), text: "Chase planner about access", done: false },
+      { id: makeId(), text: "Update spreadsheet", done: false }
+    ],
+
+  IMPORTANT:
+    The page stores tasks in browser storage after first use.
+    If you change hardcoded tasks later and they do not appear,
+    change STORE_KEY below to a new name, for example:
+      var STORE_KEY = "workDeskTasksDark_v2";
+*/
+
+/* Change this to a new version name if you want to force the browser to load new hardcoded defaults. */
+var STORE_KEY = "workDeskTasksDark_v2";
+
+var DAILY_ROLLOVER_HOUR = 6;
+
+/*
+  Completed tasks are hidden by default.
+  The on-screen toggle changes this to true while the page is open.
+*/
+var showCompleted = false;
+
+function makeId(){ return "id_" + Math.random().toString(36).substr(2, 9) + "_" + Date.now(); }
+
+var defaultState = {
+  weeklyTasks: [],
+
+  dailyPresets: {
+    "1": [
+	  /* Monday tasks go here */
+      { id: makeId(), text: "Check new sheet" },
+      { id: makeId(), text: "Send items for calibration"}
+    ],
+
+    "2": [
+	  /* Tuesday tasks go here */
+      { id: makeId(), text: "Take calibration down" },
+      { id: makeId(), text: "Complete EPOS" }
+    ],
+
+    "3": [
+	  /* Wednesday tasks go here */
+      { id: makeId(), text: "Copy over pway jobs" },
+	  { id: makeId(), text: "Send pway cover sheet" }
+    ],
+
+    "4": [
+	  /* Thursday tasks go here */
+      { id: makeId(), text: "Repair and return" }
+    ],
+
+    "5": [
+	  /* Friday tasks go here */
+      { id: makeId(), text: "Send EPOS & WON" }
+    ],
+
+    "6": [
+      /* Saturday tasks go here */
+    ],
+
+    "0": [
+	  /* Sunday tasks go here */
+      { id: makeId(), text: "Sunday test preset" },
+    ]
+  },
+
+  oneOffTasks: [
+    /* Starting to-do tasks go here, for example:
+    { id: makeId(), text: "Chase access request", done: false },
+    { id: makeId(), text: "Update spreadsheet", done: false }
+    */
+  ],
+
+  dailyActive: [],
+  lastDailyKey: null,
+  lastWeeklyKey: null
+};
+
+/*
+  ============================================================
+  END OF HARDCODED TASKS SECTION
+  You should not normally need to edit below this line.
+  ============================================================
+*/
+
+function clone(obj){ return JSON.parse(JSON.stringify(obj)); }
+
+function loadState(){
+  try{
+    var raw = localStorage.getItem(STORE_KEY);
+    if(!raw) return clone(defaultState);
+    var s = JSON.parse(raw);
+    if(!s.weeklyTasks) s.weeklyTasks = [];
+    if(!s.dailyPresets) s.dailyPresets = clone(defaultState.dailyPresets);
+    if(!s.dailyActive) s.dailyActive = [];
+    if(!s.oneOffTasks) s.oneOffTasks = [];
+    ["0","1","2","3","4","5","6"].forEach(function(k){
+      if(!s.dailyPresets[k]) s.dailyPresets[k] = [];
+    });
+    return s;
+  }catch(e){
+    return clone(defaultState);
+  }
+}
+
+var state = loadState();
+
+function saveState(){ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
+function pad2(n){ return n < 10 ? "0" + n : "" + n; }
+function trim(s){ return String(s).replace(/^\s+|\s+$/g, ""); }
+
+function startOfOperationalDay(now){
+  var d = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  if(now.getHours() < DAILY_ROLLOVER_HOUR) d.setDate(d.getDate() - 1);
+  return d;
+}
+
+function dateKey(d){
+  return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+}
+
+function rolloverIfNeeded(){
+  var now = new Date();
+  var opDay = startOfOperationalDay(now);
+  var todayKey = dateKey(opDay);
+  var todayDow = String(opDay.getDay());
+
+  if(state.lastDailyKey !== todayKey){
+    var carried = [];
+    for(var i=0;i<state.dailyActive.length;i++){
+      var t = state.dailyActive[i];
+      if(!t.done){
+        t.carried = true;
+        carried.push(t);
+      }
+    }
+
+    var todays = state.dailyPresets[todayDow] || [];
+    var existing = {};
+    for(var c=0;c<carried.length;c++) existing[carried[c].presetId || carried[c].id] = true;
+
+    for(var j=0;j<todays.length;j++){
+      var p = todays[j];
+      if(!existing[p.id]){
+        carried.push({
+          id: makeId(),
+          presetId: p.id,
+          text: p.text,
+          done: false,
+          carried: false,
+          scheduledDow: todayDow,
+          createdFor: todayKey
+        });
+      }
+    }
+
+    state.dailyActive = carried;
+    state.lastDailyKey = todayKey;
+    saveState();
+  }
+}
+
+function dayName(d, longForm){
+  var longDays = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  var shortDays = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  return longForm ? longDays[d.getDay()] : shortDays[d.getDay()];
+}
+
+function monthName(d, longForm){
+  var longMonths = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  var shortMonths = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return longForm ? longMonths[d.getMonth()] : shortMonths[d.getMonth()];
+}
+
+function formatDate(d){ return dayName(d, true) + " " + d.getDate() + " " + monthName(d, true) + " " + d.getFullYear(); }
+function formatTime(d){ return pad2(d.getHours()) + ":" + pad2(d.getMinutes()); }
+function formatShortDateTime(d){ return dayName(d, false) + " " + d.getDate() + " " + monthName(d, false) + " " + formatTime(d); }
+
+function mondayOnOrBefore(d){
+  var x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  var day = x.getDay();
+  var diff = day === 0 ? -6 : 1 - day;
+  x.setDate(x.getDate() + diff);
+  return x;
+}
+
+function financialWeek(now){
+  var y = now.getFullYear();
+  var fy = now.getMonth() >= 3 ? y : y - 1;
+  var fw1 = mondayOnOrBefore(new Date(fy, 3, 1));
+  var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  var days = Math.floor((today.getTime() - fw1.getTime()) / 86400000);
+  var week = Math.floor(days / 7) + 1;
+  if(week < 1) week = 1;
+  if(week > 52) week = 52;
+  return week;
+}
+
+function renderCalendar(now){
+  var grid = document.getElementById("calendarGrid");
+  grid.innerHTML = "";
+  document.getElementById("monthTitle").textContent = monthName(now, true) + " " + now.getFullYear();
+
+  var heads = ["M","T","W","T","F","S","S"];
+  for(var h=0; h<heads.length; h++){
+    var hd = document.createElement("div");
+    hd.className = "cal-head";
+    hd.textContent = heads[h];
+    grid.appendChild(hd);
+  }
+
+  var first = new Date(now.getFullYear(), now.getMonth(), 1);
+  var start = new Date(first.getFullYear(), first.getMonth(), first.getDate());
+  var firstDay = start.getDay();
+  var offset = firstDay === 0 ? -6 : 1 - firstDay;
+  start.setDate(start.getDate() + offset);
+
+  for(var i=0; i<42; i++){
+    var d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+    var cell = document.createElement("div");
+    var cls = "cal-day";
+    if(d.getMonth() !== now.getMonth()) cls += " cal-muted";
+    if(d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate()) cls += " cal-today";
+    cell.className = cls;
+    cell.textContent = d.getDate();
+    grid.appendChild(cell);
+  }
+}
+
+function updateTop(){
+  var now = new Date();
+  var p48 = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+  document.getElementById("dateText").textContent = formatDate(now);
+  document.getElementById("timeText").textContent = formatTime(now);
+  document.getElementById("plus48Text").textContent = formatShortDateTime(p48);
+  document.getElementById("weekText").textContent = String(financialWeek(now));
+  renderCalendar(now);
+}
+
+function render(){
+  rolloverIfNeeded();
+  renderDaily();
+  renderTodo();
+  updateTop();
+}
+
+function sortedTaskRefs(list){
+  /*
+    Returns task references sorted so completed tasks are first.
+    Each entry keeps the original index so edit/delete/tick actions still update the correct stored task.
+  */
+  var refs = [];
+  for(var i=0;i<list.length;i++){
+    refs.push({ index:i, task:list[i] });
+  }
+
+  refs.sort(function(a,b){
+    if(a.task.done === b.task.done) return a.index - b.index;
+    return a.task.done ? -1 : 1;
+  });
+
+  return refs;
+}
+
+function updateToggleVisual(){
+  var label = document.getElementById("showCompletedLabel");
+  if(!label) return;
+  if(showCompleted) label.className = "toggle-completed is-on";
+  else label.className = "toggle-completed";
+}
+
+function toggleCompleted(){
+  var toggle = document.getElementById("showCompletedToggle");
+  showCompleted = toggle ? toggle.checked : false;
+  updateToggleVisual();
+  render();
+}
+
+function renderDaily(){
+  var el = document.getElementById("dailyList");
+  el.innerHTML = "";
+
+  var done = 0, carried = 0, visible = 0;
+  var refs = sortedTaskRefs(state.dailyActive);
+
+  for(var r=0;r<refs.length;r++){
+    var item = refs[r];
+    if(item.task.done) done++;
+    if(item.task.carried && !item.task.done) carried++;
+
+    if(!showCompleted && item.task.done) continue;
+
+    visible++;
+    el.appendChild(taskRow("daily", item.index, item.task));
+  }
+
+  if(!state.dailyActive.length){
+    el.innerHTML = '<div class="empty">DAILY QUEUE EMPTY</div>';
+  }else if(!visible){
+    el.innerHTML = '<div class="empty">ALL DAILY TASKS COMPLETE</div>';
+  }
+
+  var dailySummary = done + "/" + state.dailyActive.length;
+  if(carried) dailySummary += " // " + carried + " CARRY";
+  if(done) dailySummary += " // " + done + " COMPLETE";
+
+  document.getElementById("dailySummary").textContent = dailySummary;
+}
+
+function renderTodo(){
+  var el = document.getElementById("todoList");
+  el.innerHTML = "";
+
+  var done = 0, visible = 0;
+  var refs = sortedTaskRefs(state.oneOffTasks);
+
+  for(var r=0;r<refs.length;r++){
+    var item = refs[r];
+    if(item.task.done) done++;
+
+    if(!showCompleted && item.task.done) continue;
+
+    visible++;
+    el.appendChild(taskRow("todo", item.index, item.task));
+  }
+
+  if(!state.oneOffTasks.length){
+    el.innerHTML = '<div class="empty">TO DO QUEUE EMPTY</div>';
+  }else if(!visible){
+    el.innerHTML = '<div class="empty">ALL TO DO TASKS COMPLETE</div>';
+  }
+
+  var todoSummary = done + "/" + state.oneOffTasks.length;
+  if(done) todoSummary += " // " + done + " COMPLETE";
+
+  document.getElementById("todoSummary").textContent = todoSummary;
+}
+
+function taskRow(type, index, task){
+  var row = document.createElement("div");
+  row.className = "task" + (task.done ? " done" : "");
+
+  var checkLabel = document.createElement("label");
+  checkLabel.className = "task-check";
+
+  var cb = document.createElement("input");
+  cb.type = "checkbox";
+  cb.checked = task.done;
+  cb.setAttribute("data-type", type);
+  cb.setAttribute("data-index", index);
+  cb.onchange = function(){
+    var t = this.getAttribute("data-type");
+    var idx = parseInt(this.getAttribute("data-index"), 10);
+    if(t === "todo") state.oneOffTasks[idx].done = this.checked;
+    else state.dailyActive[idx].done = this.checked;
+    saveState();
+    render();
+  };
+
+  var checkBox = document.createElement("span");
+  checkBox.className = "task-check-box";
+  checkLabel.appendChild(cb);
+  checkLabel.appendChild(checkBox);
+
+  var text = document.createElement("div");
+  text.className = "task-text";
+  text.textContent = task.text;
+
+  if(type === "daily" && task.carried && !task.done){
+    var tag = document.createElement("span");
+    tag.className = "carried-tag";
+    tag.textContent = "CARRY";
+    text.appendChild(tag);
+  }
+
+  var actions = document.createElement("div");
+  actions.className = "task-actions";
+
+  var edit = document.createElement("button");
+  edit.textContent = "EDIT";
+  edit.onclick = function(){ editTask(type, index); };
+
+  var del = document.createElement("button");
+  del.textContent = "DEL";
+  del.onclick = function(){ deleteTask(type, index); };
+
+  actions.appendChild(edit);
+  actions.appendChild(del);
+
+  row.appendChild(checkLabel);
+  row.appendChild(text);
+  row.appendChild(actions);
+
+  return row;
+}
+
+function addDailyPreset(){
+  var input = document.getElementById("dailyInput");
+  var dow = document.getElementById("daySelect").value;
+  var text = trim(input.value).toUpperCase();
+  if(!text) return;
+
+  var p = { id: makeId(), text: text };
+  state.dailyPresets[dow].push(p);
+
+  var todayDow = String(startOfOperationalDay(new Date()).getDay());
+  if(dow === todayDow){
+    state.dailyActive.push({
+      id: makeId(),
+      presetId: p.id,
+      text: p.text,
+      done: false,
+      carried: false,
+      scheduledDow: dow,
+      createdFor: state.lastDailyKey
+    });
+  }
+
+  input.value = "";
+  saveState();
+  render();
+}
+
+function addTodo(){
+  var input = document.getElementById("todoInput");
+  var text = trim(input.value).toUpperCase();
+  if(!text) return;
+  state.oneOffTasks.push({ id: makeId(), text: text, done: false });
+  input.value = "";
+  saveState();
+  render();
+}
+
+function editTask(type, index){
+  var current = type === "todo" ? state.oneOffTasks[index].text : state.dailyActive[index].text;
+  var updated = prompt("Edit task:", current);
+  if(updated === null) return;
+  updated = trim(updated).toUpperCase();
+  if(!updated) return;
+
+  if(type === "todo"){
+    state.oneOffTasks[index].text = updated;
+  }else{
+    var active = state.dailyActive[index];
+    active.text = updated;
+    if(active.presetId && active.scheduledDow && state.dailyPresets[active.scheduledDow]){
+      for(var i=0;i<state.dailyPresets[active.scheduledDow].length;i++){
+        if(state.dailyPresets[active.scheduledDow][i].id === active.presetId){
+          state.dailyPresets[active.scheduledDow][i].text = updated;
+        }
+      }
+    }
+  }
+
+  saveState();
+  render();
+}
+
+function deleteTask(type, index){
+  var task = type === "todo" ? state.oneOffTasks[index] : state.dailyActive[index];
+  if(!confirm("Delete task?\n\n" + task.text)) return;
+
+  if(type === "todo"){
+    state.oneOffTasks.splice(index, 1);
+  }else{
+    var active = state.dailyActive[index];
+    state.dailyActive.splice(index, 1);
+    if(active.presetId && active.scheduledDow && confirm("Also remove this from its future preset day?")){
+      var arr = state.dailyPresets[active.scheduledDow] || [];
+      for(var i=arr.length - 1; i>=0; i--){
+        if(arr[i].id === active.presetId) arr.splice(i, 1);
+      }
+    }
+  }
+
+  saveState();
+  render();
+}
+
+function resetToday(){
+  if(!confirm("Reset daily list from presets?")) return;
+  state.lastDailyKey = null;
+  rolloverIfNeeded();
+  render();
+}
+
+function bindEnter(id, fn){
+  document.getElementById(id).onkeypress = function(e){
+    e = e || window.event;
+    var key = e.keyCode || e.which;
+    if(key === 13){
+      fn();
+      return false;
+    }
+  };
+}
+
+bindEnter("dailyInput", addDailyPreset);
+bindEnter("todoInput", addTodo);
+
+updateToggleVisual();
+render();
+setInterval(render, 1000);
+</script>
+</body>
+</html>
