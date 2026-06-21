@@ -30,9 +30,22 @@ html,body{
   width:100%;
   height:100%;
   overflow:hidden;
-  background:
+  background-color:#020305;
+  background-image:
     radial-gradient(circle at 20% 0%, rgba(87,232,255,.08), transparent 35%),
+    linear-gradient(rgba(102,255,102,.14) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(102,255,102,.10) 1px, transparent 1px),
     linear-gradient(180deg,#05070d,#020305);
+  background-size:
+    100% 100%,
+    36px 36px,
+    36px 36px,
+    100% 100%;
+  background-position:
+    0 0,
+    0 0,
+    0 0,
+    0 0;
   color:var(--text);
   font-family:"Courier New", Courier, monospace;
   -webkit-text-size-adjust:100%;
@@ -60,12 +73,10 @@ body::after{
   position:fixed;
   inset:0;
   pointer-events:none;
-  opacity:.18;
-  background-image:
-    linear-gradient(rgba(102,255,102,.16) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(102,255,102,.12) 1px, transparent 1px);
-  background-size: 36px 36px;
-  mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+  opacity:.10;
+  background:
+    linear-gradient(to bottom, transparent 0%, rgba(102,255,102,.08) 15%, rgba(102,255,102,.08) 85%, transparent 100%);
+  z-index:1;
 }
 
 #app{
@@ -76,17 +87,20 @@ body::after{
   padding:10px;
   display:flex;
   flex-direction:column;
-  gap:8px;
+  gap:10px;
   overflow:hidden;
   position:relative;
+  z-index:2;
 }
 
 .frame{
   position:relative;
-  background:linear-gradient(180deg, rgba(7,11,18,.96), rgba(3,6,10,.98));
+  background:
+    linear-gradient(180deg, #070b12, #03060a);
   border:1px solid var(--line);
   box-shadow:
     inset 0 0 0 1px rgba(87,232,255,.12),
+    0 0 0 1px rgba(3,5,9,.95),
     0 0 14px rgba(102,255,102,.12);
   clip-path:polygon(
     0 0,
@@ -129,7 +143,7 @@ body::after{
   flex-shrink:0;
   display:flex;
   align-items:stretch;
-  gap:8px;
+  gap:10px;
 }
 
 .clock{
@@ -256,7 +270,7 @@ body::after{
   min-height:0;
   display:flex;
   flex-direction:column;
-  gap:8px;
+  gap:10px;
 }
 
 .panel{
@@ -273,8 +287,8 @@ body::after{
   align-items:center;
   border-bottom:1px solid rgba(102,255,102,.35);
   background:
-    linear-gradient(90deg, rgba(102,255,102,.11), transparent 65%),
-    rgba(11,16,24,.96);
+    linear-gradient(90deg, rgba(102,255,102,.11), #0b1018 65%),
+    #0b1018;
   padding:8px 10px;
 }
 
@@ -316,45 +330,36 @@ body::after{
   font-weight:800;
 }
 
-/* Custom task checkbox */
-.task-check{
-  position:relative;
-  width:22px;
-  height:22px;
-  margin:0 8px 0 0;
+/* Old-iOS-safe task check control.
+   This avoids native checkbox rendering glitches on iOS 12. */
+.task-check-btn{
+  -webkit-appearance:none;
+  appearance:none;
+  width:26px;
+  height:26px;
+  min-width:26px;
   flex-shrink:0;
-  display:inline-block;
-}
-
-.task-check input{
-  position:absolute;
-  opacity:0;
-  width:22px;
-  height:22px;
-  margin:0;
-}
-
-.task-check-box{
-  position:absolute;
-  inset:0;
-  border:1px solid var(--line);
+  margin:0 10px 0 0;
+  padding:0;
+  border:2px solid var(--line);
   background:#020403;
+  border-radius:0;
   box-shadow:
-    inset 0 0 0 1px rgba(102,255,102,.12),
+    inset 0 0 0 1px rgba(102,255,102,.14),
     0 0 7px rgba(102,255,102,.12);
 }
 
-.task-check input:checked + .task-check-box{
+.task-check-btn.is-done{
   background:var(--green);
   border-color:var(--green);
   box-shadow:
     0 0 9px rgba(157,255,107,.6),
-    inset 0 0 0 2px #031008;
+    inset 0 0 0 3px #031008;
 }
 
-/* Completed task box fills green but shows no tick mark. */
-.task-check input:checked + .task-check-box::after{
-  content:none;
+.task-check-btn:active{
+  background:var(--cyan);
+  border-color:var(--cyan);
 }
 
 /* Theme-matched scroll bars */
@@ -382,6 +387,7 @@ body::after{
   min-width:0;
   word-break:break-word;
   text-transform:uppercase;
+  padding-right:6px;
 }
 
 .task.done .task-text{
@@ -401,6 +407,11 @@ body::after{
   display:flex;
   flex-shrink:0;
   margin-left:5px;
+}
+
+.task-actions button{
+  min-height:34px;
+  padding:4px 8px;
 }
 
 button{
@@ -450,8 +461,15 @@ button:active{
   color:#4f755b;
 }
 
-.add input{flex:1}
-.add select{width:62px;color:var(--green)}
+.add input{
+  flex:1;
+  width:1%;
+}
+
+.add select{
+  width:62px;
+  color:var(--green);
+}
 
 .empty{
   color:var(--dim);
@@ -467,9 +485,9 @@ button:active{
 
 .controls{
   flex-shrink:0;
-  height:32px;
+  height:36px;
   display:flex;
-  gap:8px;
+  gap:10px;
 }
 
 .controls button{
@@ -527,6 +545,9 @@ button:active{
     max-height:1024px;
   }
 }
+
+/* Task panels use simple flex layout for better iOS 12 compatibility. */
+
 </style>
 </head>
 
@@ -623,7 +644,7 @@ button:active{
 */
 
 /* Change this to a new version name if you want to force the browser to load new hardcoded defaults. */
-var STORE_KEY = "workDeskTasksDark_v1";
+var STORE_KEY = "workDeskTasksDark_v3";
 
 var DAILY_ROLLOVER_HOUR = 6;
 
@@ -952,27 +973,20 @@ function taskRow(type, index, task){
   var row = document.createElement("div");
   row.className = "task" + (task.done ? " done" : "");
 
-  var checkLabel = document.createElement("label");
-  checkLabel.className = "task-check";
-
-  var cb = document.createElement("input");
-  cb.type = "checkbox";
-  cb.checked = task.done;
-  cb.setAttribute("data-type", type);
-  cb.setAttribute("data-index", index);
-  cb.onchange = function(){
+  var checkBtn = document.createElement("button");
+  checkBtn.type = "button";
+  checkBtn.className = "task-check-btn" + (task.done ? " is-done" : "");
+  checkBtn.setAttribute("aria-label", task.done ? "Mark task incomplete" : "Mark task complete");
+  checkBtn.setAttribute("data-type", type);
+  checkBtn.setAttribute("data-index", index);
+  checkBtn.onclick = function(){
     var t = this.getAttribute("data-type");
     var idx = parseInt(this.getAttribute("data-index"), 10);
-    if(t === "todo") state.oneOffTasks[idx].done = this.checked;
-    else state.dailyActive[idx].done = this.checked;
+    if(t === "todo") state.oneOffTasks[idx].done = !state.oneOffTasks[idx].done;
+    else state.dailyActive[idx].done = !state.dailyActive[idx].done;
     saveState();
     render();
   };
-
-  var checkBox = document.createElement("span");
-  checkBox.className = "task-check-box";
-  checkLabel.appendChild(cb);
-  checkLabel.appendChild(checkBox);
 
   var text = document.createElement("div");
   text.className = "task-text";
@@ -999,7 +1013,7 @@ function taskRow(type, index, task){
   actions.appendChild(edit);
   actions.appendChild(del);
 
-  row.appendChild(checkLabel);
+  row.appendChild(checkBtn);
   row.appendChild(text);
   row.appendChild(actions);
 
@@ -1008,25 +1022,29 @@ function taskRow(type, index, task){
 
 function addDailyPreset(){
   var input = document.getElementById("dailyInput");
-  var dow = document.getElementById("daySelect").value;
   var text = trim(input.value).toUpperCase();
   if(!text) return;
+
+  /*
+    daySelect was removed from the UI, so new daily tasks are now added
+    to the current operational day automatically.
+  */
+  var dow = String(startOfOperationalDay(new Date()).getDay());
+
+  if(!state.dailyPresets[dow]) state.dailyPresets[dow] = [];
 
   var p = { id: makeId(), text: text };
   state.dailyPresets[dow].push(p);
 
-  var todayDow = String(startOfOperationalDay(new Date()).getDay());
-  if(dow === todayDow){
-    state.dailyActive.push({
-      id: makeId(),
-      presetId: p.id,
-      text: p.text,
-      done: false,
-      carried: false,
-      scheduledDow: dow,
-      createdFor: state.lastDailyKey
-    });
-  }
+  state.dailyActive.push({
+    id: makeId(),
+    presetId: p.id,
+    text: p.text,
+    done: false,
+    carried: false,
+    scheduledDow: dow,
+    createdFor: state.lastDailyKey
+  });
 
   input.value = "";
   saveState();
@@ -1089,12 +1107,6 @@ function deleteTask(type, index){
   render();
 }
 
-function resetToday(){
-  if(!confirm("Reset daily list from presets?")) return;
-  state.lastDailyKey = null;
-  rolloverIfNeeded();
-  render();
-}
 
 function bindEnter(id, fn){
   document.getElementById(id).onkeypress = function(e){
