@@ -1,0 +1,20 @@
+{
+  "1": [
+    "CHECK NEW SHEET",
+    "SEND ITEMS FOR CALIBRATION"
+  ],
+  "2": [
+    "TAKE CALIBRATION DOWN",
+    "COMPLETE EPOS"
+  ],
+  "3": [
+    "COPY OVER PWAY JOBS",
+    "SEND PWAY COVER SHEET"
+  ],
+  "4": [
+    "REPAIR AND RETURN"
+  ],
+  "5": [
+    "SEND EPOS & WON"
+  ]
+}
