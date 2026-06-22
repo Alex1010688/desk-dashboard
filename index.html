@@ -98,6 +98,10 @@ body::after{
   margin-top:7px;
 }
 
+#dashboardPage > * + *{
+  margin-top:7px;
+}
+
 .top > * + *{
   margin-left:7px;
 }
@@ -293,6 +297,14 @@ body::after{
   min-height:0;
   display:flex;
   flex-direction:column;
+}
+
+#dailyPanel{
+  flex:0 0 auto;
+}
+
+#todoPanel{
+  flex:1 1 auto;
 }
 
 .panel-head{
@@ -823,7 +835,7 @@ button:active{
   </div>
 
   <div class="task-area">
-    <div class="frame panel">
+    <div class="frame panel" id="dailyPanel">
       <div class="panel-head">
         <div class="panel-title">Daily</div>
         <div class="panel-count" id="dailySummary">0/0</div>
@@ -835,7 +847,7 @@ button:active{
       </div>
     </div>
 
-    <div class="frame panel">
+    <div class="frame panel" id="todoPanel">
       <div class="panel-head">
         <div class="panel-title">To Do</div>
         <div class="panel-count" id="todoSummary">0/0</div>
@@ -1183,11 +1195,59 @@ function updateTop(){
   renderCalendar(now);
 }
 
+function resizeDailyPanel(){
+  var taskArea = document.querySelector(".task-area");
+  var dailyPanel = document.getElementById("dailyPanel");
+  var todoPanel = document.getElementById("todoPanel");
+  var dailyList = document.getElementById("dailyList");
+
+  if(!taskArea || !dailyPanel || !todoPanel || !dailyList) return;
+
+  var gap = 7;
+
+  /*
+    Maximum is the old equal-half panel size.
+  */
+  var maxDailyHeight = Math.floor((taskArea.clientHeight - gap) / 2);
+
+  /*
+    Count the currently visible Daily rows.
+    This respects SHOW COMPLETE being on/off.
+  */
+  var visibleRows = dailyList.getElementsByClassName("task").length;
+
+  var header = dailyPanel.getElementsByClassName("panel-head")[0];
+  var addBar = dailyPanel.getElementsByClassName("add")[0];
+
+  var headerHeight = header ? header.offsetHeight : 40;
+  var addHeight = addBar ? addBar.offsetHeight : 48;
+
+  var rowHeight = 38;
+  var listPadding = 14;
+  var frameAllowance = 8;
+
+  var wantedHeight =
+    headerHeight +
+    addHeight +
+    listPadding +
+    frameAllowance +
+    (visibleRows * rowHeight);
+
+  var minDailyHeight = headerHeight + addHeight + 54;
+
+  if(wantedHeight < minDailyHeight) wantedHeight = minDailyHeight;
+  if(wantedHeight > maxDailyHeight) wantedHeight = maxDailyHeight;
+
+  dailyPanel.style.height = wantedHeight + "px";
+  todoPanel.style.height = "auto";
+}
+	
 function render(){
   rolloverIfNeeded();
   renderDaily();
   renderTodo();
   updateTop();
+  resizeDailyPanel();
 }
 
 function sortedTaskRefs(list){
@@ -1767,6 +1827,10 @@ bindEnter("presetInput", addPresetFromPage);
 updateToggleVisual();
 render();
 setInterval(render, 1000);
+
+window.onresize = function(){
+  resizeDailyPanel();
+};
 </script>
 </body>
 </html>
