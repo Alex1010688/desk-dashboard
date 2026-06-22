@@ -560,6 +560,194 @@ button:active{
   }
 }
 
+
+/* Daily preset management page */
+.page{
+  width:100%;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+
+#dailyPresetsPage{
+  display:none;
+}
+
+.preset-page{
+  flex:1;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  padding:10px;
+}
+
+.preset-header{
+  flex-shrink:0;
+  padding:10px 12px;
+  border-bottom:1px solid rgba(102,255,102,.35);
+  background:
+    linear-gradient(90deg, rgba(102,255,102,.11), #0b1018 65%),
+    #0b1018;
+}
+
+.preset-title{
+  color:var(--text);
+  font-size:22px;
+  line-height:1;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:2px;
+}
+
+.preset-title::before{
+  content:"// ";
+  color:var(--green);
+  font-size:20px;
+}
+
+.preset-subtitle{
+  margin-top:6px;
+  color:var(--muted);
+  font-size:18px;
+  font-weight:900;
+  text-transform:uppercase;
+}
+
+.preset-list{
+  flex:1;
+  min-height:0;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  padding:8px;
+}
+
+.day-block{
+  border:1px solid rgba(102,255,102,.28);
+  background:#050805;
+  margin-bottom:8px;
+}
+
+.day-block:last-child{
+  margin-bottom:0;
+}
+
+.day-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:7px 8px;
+  border-bottom:1px solid rgba(102,255,102,.22);
+  background:#08110c;
+}
+
+.day-name{
+  color:var(--green);
+  font-size:18px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:1px;
+}
+
+.day-count{
+  color:var(--cyan);
+  font-size:18px;
+  font-weight:900;
+}
+
+.preset-task{
+  min-height:38px;
+  display:flex;
+  align-items:center;
+  border-bottom:1px solid rgba(102,255,102,.12);
+  padding:4px 6px;
+  font-size:18px;
+  font-weight:800;
+}
+
+.preset-task:last-child{
+  border-bottom:0;
+}
+
+.preset-task-text{
+  flex:1;
+  min-width:0;
+  word-break:break-word;
+  text-transform:uppercase;
+  padding-right:6px;
+}
+
+.preset-actions{
+  display:flex;
+  flex-shrink:0;
+}
+
+.preset-actions button{
+  min-height:34px;
+  padding:4px 8px;
+}
+
+.preset-empty{
+  color:var(--dim);
+  padding:8px 6px;
+  font-size:18px;
+  font-weight:900;
+  text-transform:uppercase;
+}
+
+.preset-add{
+  flex-shrink:0;
+  display:flex;
+  border-top:1px solid rgba(102,255,102,.35);
+  background:#050805;
+  padding:6px;
+}
+
+.preset-add select,
+.preset-add input{
+  min-width:0;
+  border:1px solid var(--line-dim);
+  background:#020403;
+  color:var(--text);
+  font-family:"Courier New", Courier, monospace;
+  font-size:18px;
+  font-weight:800;
+  padding:7px;
+  margin-right:5px;
+  border-radius:0;
+  outline:none;
+  text-transform:uppercase;
+}
+
+.preset-add select{
+  width:82px;
+  color:var(--green);
+}
+
+.preset-add input{
+  flex:1;
+  width:1%;
+}
+
+.preset-add input::placeholder{
+  color:#4f755b;
+}
+
+.page-controls{
+  flex-shrink:0;
+  height:36px;
+  display:flex;
+}
+
+.page-controls > * + *{
+  margin-left:7px;
+}
+
+.page-controls button{
+  flex:1;
+  margin-left:0;
+}
+
 /* Task panels use simple flex layout for better iOS 12 compatibility. */
 
 </style>
@@ -567,6 +755,7 @@ button:active{
 
 <body>
 <div id="app">
+  <div id="dashboardPage" class="page">
   <div class="top">
     <div class="frame clock">
       <div>
@@ -613,10 +802,41 @@ button:active{
   </div>
 
   <div class="controls">
+    <button onclick="showDailyPresetsPage()">DAILY LIST</button>
     <label class="toggle-completed" id="showCompletedLabel">
       <input type="checkbox" id="showCompletedToggle" onchange="toggleCompleted()">
       SHOW COMPLETE
     </label>
+  </div>
+  </div>
+
+  <div id="dailyPresetsPage" class="page">
+    <div class="frame preset-page">
+      <div class="preset-header">
+        <div class="preset-title">Daily Presets</div>
+        <div class="preset-subtitle">Recurring tasks by operational day</div>
+      </div>
+
+      <div class="preset-list" id="dailyPresetsList"></div>
+
+      <div class="preset-add">
+        <select id="presetDaySelect">
+          <option value="1">MON</option>
+          <option value="2">TUE</option>
+          <option value="3">WED</option>
+          <option value="4">THU</option>
+          <option value="5">FRI</option>
+          <option value="6">SAT</option>
+          <option value="0">SUN</option>
+        </select>
+        <input id="presetInput" placeholder="ADD DAILY PRESET">
+        <button onclick="addPresetFromPage()">ADD</button>
+      </div>
+    </div>
+
+    <div class="page-controls">
+      <button onclick="showDashboardPage()">BACK TO DASHBOARD</button>
+    </div>
   </div>
 </div>
 
@@ -1132,6 +1352,203 @@ function deleteTask(type, index){
 }
 
 
+
+function showDailyPresetsPage(){
+  var dashboard = document.getElementById("dashboardPage");
+  var presets = document.getElementById("dailyPresetsPage");
+
+  if(dashboard) dashboard.style.display = "none";
+  if(presets) presets.style.display = "flex";
+
+  renderDailyPresetsPage();
+}
+
+function showDashboardPage(){
+  var dashboard = document.getElementById("dashboardPage");
+  var presets = document.getElementById("dailyPresetsPage");
+
+  if(presets) presets.style.display = "none";
+  if(dashboard) dashboard.style.display = "flex";
+
+  render();
+}
+
+function dailyPresetDayName(code){
+  var names = {
+    "1":"MONDAY",
+    "2":"TUESDAY",
+    "3":"WEDNESDAY",
+    "4":"THURSDAY",
+    "5":"FRIDAY",
+    "6":"SATURDAY",
+    "0":"SUNDAY"
+  };
+
+  return names[String(code)] || "UNKNOWN";
+}
+
+function renderDailyPresetsPage(){
+  var el = document.getElementById("dailyPresetsList");
+  if(!el) return;
+
+  el.innerHTML = "";
+
+  var order = ["1","2","3","4","5","6","0"];
+
+  for(var i=0;i<order.length;i++){
+    var dow = order[i];
+    var tasks = state.dailyPresets[dow] || [];
+
+    var block = document.createElement("div");
+    block.className = "day-block";
+
+    var head = document.createElement("div");
+    head.className = "day-head";
+
+    var name = document.createElement("div");
+    name.className = "day-name";
+    name.textContent = dailyPresetDayName(dow);
+
+    var count = document.createElement("div");
+    count.className = "day-count";
+    count.textContent = tasks.length + " TASKS";
+
+    head.appendChild(name);
+    head.appendChild(count);
+    block.appendChild(head);
+
+    if(!tasks.length){
+      var empty = document.createElement("div");
+      empty.className = "preset-empty";
+      empty.textContent = "NO DAILY PRESETS";
+      block.appendChild(empty);
+    }else{
+      for(var j=0;j<tasks.length;j++){
+        block.appendChild(presetTaskRow(dow, j, tasks[j]));
+      }
+    }
+
+    el.appendChild(block);
+  }
+}
+
+function presetTaskRow(dow, index, task){
+  var row = document.createElement("div");
+  row.className = "preset-task";
+
+  var text = document.createElement("div");
+  text.className = "preset-task-text";
+  text.textContent = task.text;
+
+  var actions = document.createElement("div");
+  actions.className = "preset-actions";
+
+  var edit = document.createElement("button");
+  edit.textContent = "EDIT";
+  edit.onclick = function(){
+    editPresetTask(dow, index);
+  };
+
+  var del = document.createElement("button");
+  del.textContent = "DEL";
+  del.onclick = function(){
+    deletePresetTask(dow, index);
+  };
+
+  actions.appendChild(edit);
+  actions.appendChild(del);
+
+  row.appendChild(text);
+  row.appendChild(actions);
+
+  return row;
+}
+
+function addPresetFromPage(){
+  var daySelect = document.getElementById("presetDaySelect");
+  var input = document.getElementById("presetInput");
+  if(!daySelect || !input) return;
+
+  var dow = String(daySelect.value);
+  var text = trim(input.value).toUpperCase();
+  if(!text) return;
+
+  if(!state.dailyPresets[dow]) state.dailyPresets[dow] = [];
+
+  var p = { id: makeId(), text: text };
+  state.dailyPresets[dow].push(p);
+
+  /*
+    If adding a preset for the current operational day, also add it to today's active list.
+  */
+  var todayDow = String(startOfOperationalDay(new Date()).getDay());
+  if(dow === todayDow){
+    state.dailyActive.push({
+      id: makeId(),
+      presetId: p.id,
+      text: p.text,
+      done: false,
+      carried: false,
+      scheduledDow: dow,
+      createdFor: state.lastDailyKey
+    });
+  }
+
+  input.value = "";
+  saveState();
+  renderDailyPresetsPage();
+}
+
+function editPresetTask(dow, index){
+  var tasks = state.dailyPresets[dow] || [];
+  if(!tasks[index]) return;
+
+  var current = tasks[index].text;
+  var updated = prompt("Edit daily preset:", current);
+  if(updated === null) return;
+
+  updated = trim(updated).toUpperCase();
+  if(!updated) return;
+
+  tasks[index].text = updated;
+
+  /*
+    Update matching active daily tasks linked to this preset.
+  */
+  var presetId = tasks[index].id;
+  for(var i=0;i<state.dailyActive.length;i++){
+    if(state.dailyActive[i].presetId === presetId){
+      state.dailyActive[i].text = updated;
+    }
+  }
+
+  saveState();
+  renderDailyPresetsPage();
+}
+
+function deletePresetTask(dow, index){
+  var tasks = state.dailyPresets[dow] || [];
+  if(!tasks[index]) return;
+
+  var task = tasks[index];
+  if(!confirm("Delete daily preset?\n\n" + task.text)) return;
+
+  tasks.splice(index, 1);
+
+  /*
+    Remove matching active task if it was generated from this preset and is not carried.
+    Carried tasks are left alone because they are already overdue active work.
+  */
+  for(var i=state.dailyActive.length - 1;i>=0;i--){
+    if(state.dailyActive[i].presetId === task.id && !state.dailyActive[i].carried){
+      state.dailyActive.splice(i, 1);
+    }
+  }
+
+  saveState();
+  renderDailyPresetsPage();
+}
+
 function bindEnter(id, fn){
   document.getElementById(id).onkeypress = function(e){
     e = e || window.event;
@@ -1145,6 +1562,7 @@ function bindEnter(id, fn){
 
 bindEnter("dailyInput", addDailyPreset);
 bindEnter("todoInput", addTodo);
+bindEnter("presetInput", addPresetFromPage);
 
 updateToggleVisual();
 render();
