@@ -377,6 +377,27 @@ body::after{
   border-color:var(--cyan);
 }
 
+
+/* Keyboard selection highlight */
+.task.selected{
+  background:rgba(102,255,102,.14);
+  outline:2px solid var(--green);
+  outline-offset:-2px;
+}
+
+.task.selected .task-text{
+  color:var(--text);
+}
+
+.keyboard-hint{
+  color:var(--dim);
+  font-size:18px;
+  font-weight:900;
+  text-transform:uppercase;
+  text-align:center;
+  padding:3px 0 0;
+}
+
 /* Theme-matched scroll bars */
 .list::-webkit-scrollbar{
   width:10px;
@@ -668,6 +689,14 @@ var DAILY_ROLLOVER_HOUR = 6;
 */
 var showCompleted = false;
 
+/*
+  Keyboard navigation state.
+  selectedList is either "daily" or "todo".
+  selectedIndex is the index within the currently visible task rows.
+*/
+var selectedList = "daily";
+var selectedIndex = 0;
+
 function makeId(){ return "id_" + Math.random().toString(36).substr(2, 9) + "_" + Date.now(); }
 
 var defaultState = {
@@ -898,6 +927,7 @@ function updateTop(){
 
 function render(){
   rolloverIfNeeded();
+  clampSelection();
   renderDaily();
   renderTodo();
   updateTop();
@@ -935,6 +965,90 @@ function toggleCompleted(){
   render();
 }
 
+
+function visibleTaskRefsFor(list){
+  var refs = sortedTaskRefs(list);
+  var visible = [];
+
+  for(var i=0;i<refs.length;i++){
+    if(!showCompleted && refs[i].task.done) continue;
+    visible.push(refs[i]);
+  }
+
+  return visible;
+}
+
+function currentVisibleRefs(){
+  if(selectedList === "todo") return visibleTaskRefsFor(state.oneOffTasks);
+  return visibleTaskRefsFor(state.dailyActive);
+}
+
+function clampSelection(){
+  var refs = currentVisibleRefs();
+
+  if(refs.length === 0){
+    selectedIndex = 0;
+    return;
+  }
+
+  if(selectedIndex < 0) selectedIndex = 0;
+  if(selectedIndex >= refs.length) selectedIndex = refs.length - 1;
+}
+
+function moveSelection(delta){
+  var refs = currentVisibleRefs();
+  if(refs.length === 0) return;
+
+  selectedIndex += delta;
+
+  if(selectedIndex < 0) selectedIndex = refs.length - 1;
+  if(selectedIndex >= refs.length) selectedIndex = 0;
+
+  render();
+}
+
+function switchSelectedList(){
+  selectedList = selectedList === "daily" ? "todo" : "daily";
+  selectedIndex = 0;
+  render();
+}
+
+function toggleSelectedTask(){
+  var refs = currentVisibleRefs();
+  if(refs.length === 0) return;
+
+  var ref = refs[selectedIndex];
+
+  if(selectedList === "todo"){
+    state.oneOffTasks[ref.index].done = !state.oneOffTasks[ref.index].done;
+  }else{
+    state.dailyActive[ref.index].done = !state.dailyActive[ref.index].done;
+  }
+
+  saveState();
+  render();
+}
+
+function editSelectedTask(){
+  var refs = currentVisibleRefs();
+  if(refs.length === 0) return;
+
+  editTask(selectedList, refs[selectedIndex].index);
+}
+
+function deleteSelectedTask(){
+  var refs = currentVisibleRefs();
+  if(refs.length === 0) return;
+
+  deleteTask(selectedList, refs[selectedIndex].index);
+}
+
+function focusInput(id){
+  var input = document.getElementById(id);
+  if(!input) return;
+  input.focus();
+}
+
 function renderDaily(){
   var el = document.getElementById("dailyList");
   el.innerHTML = "";
@@ -950,7 +1064,13 @@ function renderDaily(){
     if(!showCompleted && item.task.done) continue;
 
     visible++;
-    el.appendChild(taskRow("daily", item.index, item.task));
+    var row = taskRow("daily", item.index, item.task);
+
+    if(selectedList === "daily" && visible - 1 === selectedIndex){
+      row.className += " selected";
+    }
+
+    el.appendChild(row);
   }
 
   if(!state.dailyActive.length){
@@ -979,7 +1099,13 @@ function renderTodo(){
     if(!showCompleted && item.task.done) continue;
 
     visible++;
-    el.appendChild(taskRow("todo", item.index, item.task));
+    var row = taskRow("todo", item.index, item.task);
+
+    if(selectedList === "todo" && visible - 1 === selectedIndex){
+      row.className += " selected";
+    }
+
+    el.appendChild(row);
   }
 
   if(!state.oneOffTasks.length){
@@ -1138,6 +1264,7 @@ function bindEnter(id, fn){
     var key = e.keyCode || e.which;
     if(key === 13){
       fn();
+      this.blur();
       return false;
     }
   };
@@ -1145,6 +1272,101 @@ function bindEnter(id, fn){
 
 bindEnter("dailyInput", addDailyPreset);
 bindEnter("todoInput", addTodo);
+
+
+document.onkeydown = function(e){
+  e = e || window.event;
+
+  var target = e.target || e.srcElement;
+  var tag = target && target.tagName ? target.tagName.toLowerCase() : "";
+
+  /*
+    Do not steal normal typing while inside an input.
+    Escape leaves the input box.
+  */
+  if(tag === "input" || tag === "textarea"){
+    if(e.key === "Escape" || e.keyCode === 27){
+      target.blur();
+      if(e.preventDefault) e.preventDefault();
+      return false;
+    }
+    return true;
+  }
+
+  var key = e.key || "";
+  var code = e.keyCode || e.which;
+
+  /* J or Down Arrow = move down */
+  if(key === "j" || key === "J" || code === 40){
+    moveSelection(1);
+    if(e.preventDefault) e.preventDefault();
+    return false;
+  }
+
+  /* K or Up Arrow = move up */
+  if(key === "k" || key === "K" || code === 38){
+    moveSelection(-1);
+    if(e.preventDefault) e.preventDefault();
+    return false;
+  }
+
+  /* T = switch between Daily and To Do */
+  if(key === "t" || key === "T"){
+    switchSelectedList();
+    if(e.preventDefault) e.preventDefault();
+    return false;
+  }
+
+  /* Space or Enter = complete/incomplete selected task */
+  if(key === " " || code === 32 || key === "Enter" || code === 13){
+    toggleSelectedTask();
+    if(e.preventDefault) e.preventDefault();
+    return false;
+  }
+
+  /* E = edit selected task */
+  if(key === "e" || key === "E"){
+    editSelectedTask();
+    if(e.preventDefault) e.preventDefault();
+    return false;
+  }
+
+  /* D, Delete or Backspace = delete selected task */
+  if(key === "d" || key === "D" || key === "Delete" || code === 46 || key === "Backspace" || code === 8){
+    deleteSelectedTask();
+    if(e.preventDefault) e.preventDefault();
+    return false;
+  }
+
+  /* C = toggle Show Complete */
+  if(key === "c" || key === "C"){
+    showCompleted = !showCompleted;
+
+    var toggle = document.getElementById("showCompletedToggle");
+    if(toggle) toggle.checked = showCompleted;
+
+    updateToggleVisual();
+    render();
+    if(e.preventDefault) e.preventDefault();
+    return false;
+  }
+
+  /* N = new To Do task */
+  if(key === "n" || key === "N"){
+    focusInput("todoInput");
+    if(e.preventDefault) e.preventDefault();
+    return false;
+  }
+
+  /* A = add new Daily task */
+  if(key === "a" || key === "A"){
+    focusInput("dailyInput");
+    if(e.preventDefault) e.preventDefault();
+    return false;
+  }
+
+  return true;
+};
 
 updateToggleVisual();
 render();
