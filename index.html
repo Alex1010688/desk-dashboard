@@ -703,6 +703,53 @@ button:active{
   padding:6px;
 }
 
+
+.custom-day-select{
+  width:100%;
+  display:flex;
+  flex-wrap:wrap;
+  margin-bottom:6px;
+}
+
+.custom-day-select button{
+  flex:1 0 20%;
+  min-height:34px;
+  margin:0;
+  border:1px solid var(--line-dim);
+  background:#020403;
+  color:var(--green);
+  font-family:"Courier New", Courier, monospace;
+  font-size:18px;
+  font-weight:900;
+  padding:5px 4px;
+  text-transform:uppercase;
+}
+
+.custom-day-select button + button{
+  margin-left:-1px;
+}
+
+.custom-day-select button.day-selected{
+  background:var(--green);
+  color:#031008;
+  border-color:var(--green);
+  box-shadow:
+    0 0 8px rgba(157,255,107,.5),
+    inset 0 0 0 2px rgba(3,16,8,.55);
+}
+
+.preset-add{
+  flex-wrap:wrap;
+}
+
+.preset-add input{
+  margin-top:0;
+}
+
+.preset-add button{
+  margin-left:0;
+}
+
 .preset-add select,
 .preset-add input{
   min-width:0;
@@ -814,21 +861,24 @@ button:active{
     <div class="frame preset-page">
       <div class="preset-header">
         <div class="preset-title">Daily Presets</div>
-        <div class="preset-subtitle">Recurring tasks by operational day</div>
+        <div class="preset-subtitle">Recurring weekday tasks</div>
+        <div class="preset-subtitle" id="presetSyncStatus">LOCAL PRESETS LOADED</div>
       </div>
 
       <div class="preset-list" id="dailyPresetsList"></div>
 
       <div class="preset-add">
-        <select id="presetDaySelect">
-          <option value="1">MON</option>
-          <option value="2">TUE</option>
-          <option value="3">WED</option>
-          <option value="4">THU</option>
-          <option value="5">FRI</option>
-          <option value="6">SAT</option>
-          <option value="0">SUN</option>
-        </select>
+        <input type="hidden" id="presetDaySelect" value="1">
+
+        <div class="custom-day-select" id="customDaySelect">
+          <button type="button" class="day-selected" data-day="1" onclick="setPresetDay('1')">MON</button>
+          <button type="button" data-day="2" onclick="setPresetDay('2')">TUE</button>
+          <button type="button" data-day="3" onclick="setPresetDay('3')">WED</button>
+          <button type="button" data-day="4" onclick="setPresetDay('4')">THU</button>
+          <button type="button" data-day="5" onclick="setPresetDay('5')">FRI</button>
+          
+        </div>
+
         <input id="presetInput" placeholder="ADD DAILY PRESET">
         <button onclick="addPresetFromPage()">ADD</button>
       </div>
@@ -836,6 +886,7 @@ button:active{
 
     <div class="page-controls">
       <button onclick="showDashboardPage()">BACK TO DASHBOARD</button>
+      <button onclick="loadDailyPresetsFromGithub()">REFRESH FROM GITHUB</button>
     </div>
   </div>
 </div>
@@ -1393,7 +1444,7 @@ function renderDailyPresetsPage(){
 
   el.innerHTML = "";
 
-  var order = ["1","2","3","4","5","6","0"];
+  var order = ["1","2","3","4","5"];
 
   for(var i=0;i<order.length;i++){
     var dow = order[i];
@@ -1462,6 +1513,139 @@ function presetTaskRow(dow, index, task){
   row.appendChild(actions);
 
   return row;
+}
+
+
+
+function setPresetSyncStatus(text){
+  var status = document.getElementById("presetSyncStatus");
+  if(status) status.textContent = text;
+}
+
+function loadDailyPresetsFromGithub(){
+  /*
+    Loads daily preset tasks from daily-tasks.json in the same GitHub Pages folder
+    as this HTML file.
+
+    Expected file:
+      daily-tasks.json
+  */
+  var xhr = new XMLHttpRequest();
+
+  xhr.open("GET", "daily-tasks.json?cache=" + new Date().getTime(), true);
+
+  xhr.onreadystatechange = function(){
+    if(xhr.readyState === 4){
+      if(xhr.status >= 200 && xhr.status < 300){
+        try{
+          var imported = JSON.parse(xhr.responseText);
+          applyImportedDailyPresets(imported);
+          setPresetSyncStatus("PRESETS UPDATED FROM GITHUB");
+        }catch(e){
+          setPresetSyncStatus("ERROR READING DAILY-TASKS.JSON");
+          alert("Could not read daily-tasks.json");
+        }
+      }else{
+        setPresetSyncStatus("ERROR LOADING DAILY-TASKS.JSON");
+        alert("Could not load daily-tasks.json");
+      }
+    }
+  };
+
+  setPresetSyncStatus("LOADING DAILY-TASKS.JSON");
+  xhr.send();
+}
+
+function applyImportedDailyPresets(imported){
+  /*
+    Replaces Monday-Friday daily presets with the contents of daily-tasks.json.
+    Saturday and Sunday are kept empty.
+
+    Existing active tasks are not wiped. If the JSON includes a task for the
+    current operational day which is not already active, it is added to today's
+    Daily list.
+  */
+  var days = ["1","2","3","4","5"];
+  var newPresets = {
+    "0": [],
+    "1": [],
+    "2": [],
+    "3": [],
+    "4": [],
+    "5": [],
+    "6": []
+  };
+
+  for(var i=0;i<days.length;i++){
+    var dow = days[i];
+
+    if(imported[dow] && imported[dow].length){
+      for(var j=0;j<imported[dow].length;j++){
+        var text = trim(imported[dow][j]).toUpperCase();
+
+        if(text){
+          newPresets[dow].push({
+            id: makeId(),
+            text: text
+          });
+        }
+      }
+    }
+  }
+
+  state.dailyPresets = newPresets;
+
+  addMissingTodayPresetsToActiveList();
+
+  saveState();
+  renderDailyPresetsPage();
+  render();
+}
+
+function addMissingTodayPresetsToActiveList(){
+  var todayDow = String(startOfOperationalDay(new Date()).getDay());
+  var todays = state.dailyPresets[todayDow] || [];
+
+  var existingText = {};
+  for(var i=0;i<state.dailyActive.length;i++){
+    existingText[trim(state.dailyActive[i].text).toUpperCase()] = true;
+  }
+
+  for(var j=0;j<todays.length;j++){
+    var text = trim(todays[j].text).toUpperCase();
+
+    if(text && !existingText[text]){
+      state.dailyActive.push({
+        id: makeId(),
+        presetId: todays[j].id,
+        text: text,
+        done: false,
+        carried: false,
+        scheduledDow: todayDow,
+        createdFor: state.lastDailyKey
+      });
+
+      existingText[text] = true;
+    }
+  }
+}
+
+
+function setPresetDay(dow){
+  var hidden = document.getElementById("presetDaySelect");
+  if(hidden) hidden.value = String(dow);
+
+  var wrap = document.getElementById("customDaySelect");
+  if(!wrap) return;
+
+  var buttons = wrap.getElementsByTagName("button");
+  for(var i=0;i<buttons.length;i++){
+    if(buttons[i].getAttribute("data-day") === String(dow)){
+      buttons[i].className = "day-selected";
+    }else{
+      buttons[i].className = "";
+    }
+  }
 }
 
 function addPresetFromPage(){
