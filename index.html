@@ -1045,20 +1045,36 @@ function rolloverIfNeeded(){
 
   if(state.lastDailyKey !== todayKey){
     var carried = [];
+
     for(var i=0;i<state.dailyActive.length;i++){
       var t = state.dailyActive[i];
+
       if(!t.done){
         t.carried = true;
         carried.push(t);
       }
     }
 
+    var keptTodo = [];
+
+    for(var td=0;td<state.oneOffTasks.length;td++){
+      if(!state.oneOffTasks[td].done){
+        keptTodo.push(state.oneOffTasks[td]);
+      }
+    }
+
+    state.oneOffTasks = keptTodo;
+
     var todays = state.dailyPresets[todayDow] || [];
     var existing = {};
-    for(var c=0;c<carried.length;c++) existing[carried[c].presetId || carried[c].id] = true;
+
+    for(var c=0;c<carried.length;c++){
+      existing[carried[c].presetId || carried[c].id] = true;
+    }
 
     for(var j=0;j<todays.length;j++){
       var p = todays[j];
+
       if(!existing[p.id]){
         carried.push({
           id: makeId(),
