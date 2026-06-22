@@ -575,7 +575,7 @@ button:active{
       </div>
       <div class="time" id="timeText">--:--</div>
       <div class="status-lines">
-        <div class="info-line"><span>+48h</span><strong id="plus48Text">--</strong></div>
+        <div class="info-line"><span>GZAM</span><strong id="plus48Text">--</strong></div>
         <div class="info-line"><span>week</span><strong id="weekText">--</strong></div>
       </div>
     </div>
@@ -823,10 +823,10 @@ function formatDate(d){ return dayName(d, true) + " " + d.getDate() + " " + mont
 function formatTime(d){ return pad2(d.getHours()) + ":" + pad2(d.getMinutes()); }
 function formatShortDateTime(d){ return dayName(d, false) + " " + d.getDate() + " " + monthName(d, false) + " " + formatTime(d); }
 
-function mondayOnOrBefore(d){
+function saturdayOnOrAfter(d){
   var x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  var day = x.getDay();
-  var diff = day === 0 ? -6 : 1 - day;
+  var day = x.getDay(); // 0 Sun, 1 Mon, ... 6 Sat
+  var diff = (6 - day + 7) % 7;
   x.setDate(x.getDate() + diff);
   return x;
 }
@@ -834,12 +834,24 @@ function mondayOnOrBefore(d){
 function financialWeek(now){
   var y = now.getFullYear();
   var fy = now.getMonth() >= 3 ? y : y - 1;
-  var fw1 = mondayOnOrBefore(new Date(fy, 3, 1));
+
   var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  var fw1 = saturdayOnOrAfter(new Date(fy, 3, 1));
+
+  if(today < fw1){
+    fy = fy - 1;
+    fw1 = saturdayOnOrAfter(new Date(fy, 3, 1));
+  }
+
+  var nextFw1 = saturdayOnOrAfter(new Date(fy + 1, 3, 1));
   var days = Math.floor((today.getTime() - fw1.getTime()) / 86400000);
   var week = Math.floor(days / 7) + 1;
+
+  var maxWeek = Math.floor((nextFw1.getTime() - fw1.getTime()) / 604800000);
+
   if(week < 1) week = 1;
-  if(week > 52) week = 52;
+  if(week > maxWeek) week = maxWeek;
+
   return week;
 }
 
@@ -949,7 +961,6 @@ function renderDaily(){
 
   var dailySummary = done + "/" + state.dailyActive.length;
   if(carried) dailySummary += " // " + carried + " CARRY";
-  if(done) dailySummary += " // " + done + " COMPLETE";
 
   document.getElementById("dailySummary").textContent = dailySummary;
 }
@@ -978,7 +989,6 @@ function renderTodo(){
   }
 
   var todoSummary = done + "/" + state.oneOffTasks.length;
-  if(done) todoSummary += " // " + done + " COMPLETE";
 
   document.getElementById("todoSummary").textContent = todoSummary;
 }
